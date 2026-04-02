@@ -27,7 +27,7 @@ class ShareCommand extends ServerAwareCommand
     use SharesViteServer;
     use TriggersLogin;
 
-    protected $signature = 'share {host} {--subdomain=} {--auth=} {--basicAuth=} {--magic-auth=} {--dns=} {--domain=} {--prevent-cors} {--no-vite-detection} {--qr} {--qr-code}';
+    protected $signature = 'share {host} {--subdomain=} {--auth=} {--basicAuth=} {--magic-auth=} {--dns=} {--domain=} {--prevent-cors} {--no-vite-detection} {--qr} {--qr-code} {--request-header-add=*}';
 
     protected $description = 'Share a local url with a remote expose server';
 
@@ -115,6 +115,7 @@ class ShareCommand extends ServerAwareCommand
             ->setBasicAuth($this->option('basicAuth'))
             ->setMagicAuth($this->getMagicAuthValue())
             ->setPreventCORS($this->option('prevent-cors'))
+            ->setRequestHeaders($this->parseRequestHeaders())
             ->createClient()
             ->share(
                 $this->argument('host'),
@@ -169,6 +170,20 @@ class ShareCommand extends ServerAwareCommand
         }
 
         return $this->isWindows;
+    }
+
+    protected function parseRequestHeaders(): array
+    {
+        $headers = [];
+
+        foreach ($this->option('request-header-add') as $header) {
+            $parts = explode(':', $header, 2);
+            if (count($parts) === 2) {
+                $headers[trim($parts[0])] = trim($parts[1]);
+            }
+        }
+
+        return $headers;
     }
 
     protected function getMagicAuthValue(): ?string

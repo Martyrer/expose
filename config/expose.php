@@ -189,7 +189,22 @@ return [
         \Expose\Client\Logger\Plugins\PaddleBillingPlugin::class,
         \Expose\Client\Logger\Plugins\GitHubPlugin::class,
         \Expose\Client\Logger\Plugins\MagicLoginPlugin::class,
-    ]
+    ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Request Headers
+    |--------------------------------------------------------------------------
+    |
+    | Headers to add or overwrite on every request before forwarding to the
+    | local application. This is useful for applications behind reverse
+    | proxies or ingress controllers that route based on specific headers.
+    |
+    | CLI --request-header-add options take precedence over values here.
+    |
+    | Example: ['Host' => 'myapp.test', 'X-Forwarded-Proto' => 'https']
+    |
+    */
+    'request_headers' => [],
 
 ];

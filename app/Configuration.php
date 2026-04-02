@@ -30,7 +30,10 @@ class Configuration
     /** @var bool */
     protected $preventCORS = false;
 
-    public function __construct(string $host, int $port, ?string $auth = null, ?string $basicAuth = null, bool $preventCORS = false, ?string $magicAuth = null)
+    /** @var array */
+    protected $requestHeaders = [];
+
+    public function __construct(string $host, int $port, ?string $auth = null, ?string $basicAuth = null, bool $preventCORS = false, ?string $magicAuth = null, array $requestHeaders = [])
     {
         $this->serverHost = $this->host = $host;
 
@@ -43,6 +46,8 @@ class Configuration
         $this->magicAuth = $magicAuth;
 
         $this->preventCORS = $preventCORS;
+
+        $this->requestHeaders = $requestHeaders;
 
         if ($this->magicAuth !== null) {
             config(['expose.magic-auth-secret-key' => Str::random(32)]);
@@ -91,6 +96,11 @@ class Configuration
     public function preventCORS(): bool
     {
         return $this->preventCORS;
+    }
+
+    public function requestHeaders(): array
+    {
+        return $this->requestHeaders;
     }
 
     public function port(): int

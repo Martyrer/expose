@@ -46,6 +46,9 @@ class Factory
     /** @var bool */
     protected $preventCORS = false;
 
+    /** @var array */
+    protected $requestHeaders = [];
+
     /** @var \React\EventLoop\LoopInterface */
     protected $loop;
 
@@ -103,6 +106,13 @@ class Factory
         return $this;
     }
 
+    public function setRequestHeaders(array $requestHeaders)
+    {
+        $this->requestHeaders = $requestHeaders;
+
+        return $this;
+    }
+
     public function setLoop(LoopInterface $loop)
     {
         $this->loop = $loop;
@@ -113,7 +123,7 @@ class Factory
     protected function bindConfiguration()
     {
         app()->singleton(Configuration::class, function ($app) {
-            return new Configuration($this->host, $this->port, $this->auth, $this->basicAuth, $this->preventCORS, $this->magicAuth);
+            return new Configuration($this->host, $this->port, $this->auth, $this->basicAuth, $this->preventCORS, $this->magicAuth, $this->requestHeaders);
         });
     }
 
