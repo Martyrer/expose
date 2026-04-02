@@ -258,6 +258,54 @@ class RewriteRequestHeadersTest extends TestCase
         $this->assertEquals('1.2.3.4', $result->getHeaderLine('X-Forwarded-For'));
     }
 
+    /** @test */
+    public function it_applies_header_with_empty_value()
+    {
+        $modifier = $this->createModifier(requestHeaders: ['X-Empty' => '']);
+
+        $request = new Request('GET', '/example');
+        $result = $modifier->handle($request, null);
+
+        $this->assertNotNull($result);
+        $this->assertTrue($result->hasHeader('X-Empty'));
+        $this->assertEquals('', $result->getHeaderLine('X-Empty'));
+    }
+
+    /** @test */
+    public function it_overwrites_non_host_existing_headers()
+    {
+        $modifier = $this->createModifier(requestHeaders: ['Accept' => 'application/json']);
+
+        $request = new Request('GET', '/example', ['Accept' => 'text/html']);
+        $result = $modifier->handle($request, null);
+
+        $this->assertNotNull($result);
+        $this->assertEquals('application/json', $result->getHeaderLine('Accept'));
+    }
+
+    /** @test */
+    public function it_applies_multiple_headers_including_overwrites()
+    {
+        $modifier = $this->createModifier(requestHeaders: [
+            'Host' => 'new.test',
+            'Accept' => 'application/json',
+            'X-New' => 'added',
+        ]);
+
+        $request = new Request('GET', '/example', [
+            'Host' => 'old.test',
+            'Accept' => 'text/html',
+            'User-Agent' => 'TestBrowser',
+        ]);
+        $result = $modifier->handle($request, null);
+
+        $this->assertNotNull($result);
+        $this->assertEquals('new.test', $result->getHeaderLine('Host'));
+        $this->assertEquals('application/json', $result->getHeaderLine('Accept'));
+        $this->assertEquals('added', $result->getHeaderLine('X-New'));
+        $this->assertEquals('TestBrowser', $result->getHeaderLine('User-Agent'));
+    }
+
     protected function createModifier(array $requestHeaders = []): RewriteRequestHeaders
     {
         $configuration = new Configuration('localhost', 443, null, null, false, null, $requestHeaders);

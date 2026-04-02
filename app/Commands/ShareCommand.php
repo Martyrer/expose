@@ -178,9 +178,29 @@ class ShareCommand extends ServerAwareCommand
 
         foreach ($this->option('request-header-add') as $header) {
             $parts = explode(':', $header, 2);
-            if (count($parts) === 2) {
-                $headers[trim($parts[0])] = trim($parts[1]);
+            if (count($parts) !== 2) {
+                continue;
             }
+
+            $name = trim($parts[0]);
+            $value = trim($parts[1]);
+
+            // Skip empty header names (e.g. input ":" or ": value")
+            if ($name === '') {
+                continue;
+            }
+
+            // RFC 7230: header name must be a valid token (printable ASCII, no delimiters)
+            if (preg_match('/[^a-zA-Z0-9!#$%&\'*+\-.^_`|~]/', $name)) {
+                continue;
+            }
+
+            // Reject CRLF injection and null bytes in values
+            if (preg_match('/[\r\n\x00]/', $value)) {
+                continue;
+            }
+
+            $headers[$name] = $value;
         }
 
         return $headers;

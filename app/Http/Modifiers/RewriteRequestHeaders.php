@@ -15,23 +15,17 @@ class RewriteRequestHeaders
         'x-original-host',
     ];
 
-    /** @var Configuration */
-    protected $configuration;
+    /** @var array Precomputed merged headers (config + CLI, restricted removed) */
+    protected $headers = [];
 
     public function __construct(Configuration $configuration)
     {
-        $this->configuration = $configuration;
+        $this->headers = $this->buildHeaders($configuration);
     }
 
     public function handle(RequestInterface $request, ?WebSocket $proxyConnection): ?RequestInterface
     {
-        $headers = $this->getHeaders();
-
-        foreach ($headers as $name => $value) {
-            if ($this->isRestricted($name)) {
-                continue;
-            }
-
+        foreach ($this->headers as $name => $value) {
             $request = $request->withHeader($name, $value);
         }
 
@@ -43,7 +37,7 @@ class RewriteRequestHeaders
         return in_array(strtolower($name), self::RESTRICTED_HEADERS, true);
     }
 
-    protected function getHeaders(): array
+    protected function buildHeaders(Configuration $configuration): array
     {
         $headers = [];
 
@@ -54,9 +48,16 @@ class RewriteRequestHeaders
         }
 
         // CLI --request-header-add takes precedence
-        $cliHeaders = $this->configuration->requestHeaders();
+        $cliHeaders = $configuration->requestHeaders();
         foreach ($cliHeaders as $name => $value) {
             $headers[$name] = $value;
+        }
+
+        // Remove restricted headers
+        foreach ($headers as $name => $value) {
+            if ($this->isRestricted($name)) {
+                unset($headers[$name]);
+            }
         }
 
         return $headers;
