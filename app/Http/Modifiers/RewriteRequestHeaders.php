@@ -8,6 +8,13 @@ use Ratchet\Client\WebSocket;
 
 class RewriteRequestHeaders
 {
+    /** Headers used internally by Expose that must not be overwritten. */
+    protected const RESTRICTED_HEADERS = [
+        'x-expose-request-id',
+        'x-exposed-by',
+        'x-original-host',
+    ];
+
     /** @var Configuration */
     protected $configuration;
 
@@ -21,10 +28,19 @@ class RewriteRequestHeaders
         $headers = $this->getHeaders();
 
         foreach ($headers as $name => $value) {
+            if ($this->isRestricted($name)) {
+                continue;
+            }
+
             $request = $request->withHeader($name, $value);
         }
 
         return $request;
+    }
+
+    protected function isRestricted(string $name): bool
+    {
+        return in_array(strtolower($name), self::RESTRICTED_HEADERS, true);
     }
 
     protected function getHeaders(): array
